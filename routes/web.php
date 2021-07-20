@@ -30,7 +30,7 @@ Route::get('/', function () {
     $unwindActivity = [];
     foreach ($likes as $like) {
         if ($like->likeable_type == 'App\Models\Startup') {
-            Startup::where('user_id', $like->user_id)->chunkById(Startup::count(), function ($startupDetails) use (&$unwindActivity) {
+            Startup::where('id', $like->likeable_id)->chunkById(Startup::count(), function ($startupDetails) use (&$unwindActivity) {
                 foreach ($startupDetails as $startup) {
                     $startup['type'] = 'Startup';
                     foreach (json_decode($startup->News) as $news) {
@@ -57,7 +57,7 @@ Route::get('/', function () {
                 }
             });
         } elseif ($like->likeable_type == 'App\Models\Investor') {
-            Investor::where('id', $like->user_id)->chunkById(Investor::count(), function ($investors) use (&$unwindActivity) {
+            Investor::where('id', $like->likeable_id)->chunkById(Investor::count(), function ($investors) use (&$unwindActivity) {
                 foreach ($investors as $investor) {
                     $investor['type'] = 'Investor';
                     foreach (json_decode($investor->News) as $news) {
@@ -82,7 +82,7 @@ Route::get('/', function () {
 
         foreach (array_reverse($likes) as $like) {
             if ($like->likeable_type == 'App\Models\Startup') {
-                Startup::where('user_id', $like->user_id)->chunkById(Startup::count(), function ($startupDetails) use (&$unwindActivity, &$date, &$count, &$startupActivity) {
+                Startup::where('id', $like->likeable_id)->chunkById(Startup::count(), function ($startupDetails) use (&$unwindActivity, &$date, &$count, &$startupActivity) {
                     foreach ($startupDetails as $startup) {
                         $todayActivity = [];
                         foreach ($unwindActivity as $activity) {
