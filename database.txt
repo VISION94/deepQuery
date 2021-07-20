@@ -2,7 +2,7 @@ $u = User::create(['name'=>'vatsal','email'=>'vatsal@gmail.com','image'=>'vatsal
 $u = User::create(['name'=>'roshan','email'=>'roshan@gmail.com','image'=>'roshan.png']);
 
 $i = Investor::create(['name'=>'pradip','email'=>'pradip@gmail.com','image'=>'pradip.png']);
-$iable = Fundable::create(['investor_id'=>'1','fundable_id'=>'1','fundable_type'=>'App\Models\Investor']);
+$iable = funding_investors::create(['investor_id'=>'1','funding_id'=>'1']);
 
 $c = Startup::create(['user_id'=>'1','name'=>'ecosystem','tagline'=>'save earth','logo'=>'ecosystem.png']);
 $c = Startup::create(['user_id'=>'2','name'=>'snapchat','tagline'=>'snapchat','logo'=>'snapchat.png']);

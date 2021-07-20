@@ -13,10 +13,10 @@ class CreateFundablesTable extends Migration
      */
     public function up()
     {
-        Schema::create('fundables', function (Blueprint $table) {
+        Schema::create('funding_investors', function (Blueprint $table) {
             $table->id();
-            $table->integer('fund_id');
-            $table->integer('fundables_id');
+            $table->integer('funding_id');
+            $table->integer('investor_id');
             $table->timestamps();
         });
     }
@@ -28,6 +28,6 @@ class CreateFundablesTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('fundables');
+        Schema::dropIfExists('funding_investors');
     }
 }
