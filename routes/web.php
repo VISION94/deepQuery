@@ -30,7 +30,7 @@ Route::get('/', function () {
     $unwindActivity = [];
     foreach ($likes as $like) {
         if ($like->likeable_type == 'App\Models\Startup') {
-            Startup::where('id', $like->likeable_id)->chunkById(Startup::count(), function ($startupDetails) use (&$unwindActivity) {
+            Startup::where('user_id', $like->likeable_id)->chunkById(Startup::count(), function ($startupDetails) use (&$unwindActivity) {
                 foreach ($startupDetails as $startup) {
                     $startup['type'] = 'Startup';
                     foreach (json_decode($startup->News) as $news) {
@@ -80,7 +80,7 @@ Route::get('/', function () {
     foreach ($uniques as $date => $value) {
         $count = 0;
 
-        foreach (array_reverse($likes) as $like) {
+        foreach ($likes as $like) {
             if ($like->likeable_type == 'App\Models\Startup') {
                 Startup::where('id', $like->likeable_id)->chunkById(Startup::count(), function ($startupDetails) use (&$unwindActivity, &$date, &$count, &$startupActivity) {
                     foreach ($startupDetails as $startup) {
@@ -88,7 +88,7 @@ Route::get('/', function () {
                         foreach ($unwindActivity as $activity) {
                             $id = 0;
                             try {
-                                $id = $activity['activity']->id;
+                                $id = $activity['id'];
                             } catch (Exception $ex) {
                                 $id = $activity['activity']->startup_id;
                             }
@@ -111,7 +111,7 @@ Route::get('/', function () {
                         foreach ($unwindActivity as $activity) {
                             $id = 0;
                             try {
-                                $id = $activity['activity']->id;
+                                $id = $activity['id'];
                             } catch (Exception $ex) {
                                 $id = $activity['activity']->startup_id;
                             }
