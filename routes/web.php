@@ -1,6 +1,6 @@
 <?php
 
-use App\Models\Funding_investor;
+use App\Models\funding_investors;
 use App\Models\Investor;
 use App\Models\Startup;
 use App\Models\User;
@@ -43,7 +43,7 @@ Route::get('/', function () {
                         $funding->type = 'funding';
                         $funding->date = date('Y-m-d', strtotime($funding->date_announced));
                         $funding->timestamp = $funding->date_announced;
-                        $funding->Investor = Funding_investor::join('investors', 'investors.id', '=', 'funding_investors.investor_id')
+                        $funding->Investor = funding_investors::join('investors', 'investors.id', '=', 'funding_investors.investor_id')
                             ->where('funding_id', $funding->id)
                             ->get();
                         array_push($unwindActivity, array_merge([json_decode($startup, true)][0], ['activity' => $funding]));
