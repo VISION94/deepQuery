@@ -1,0 +1,21 @@
+$u = User::create(['name'=>'vatsal','email'=>'vatsal@gmail.com','image'=>'vatsal.png']);
+$u = User::create(['name'=>'roshan','email'=>'roshan@gmail.com','image'=>'roshan.png']);
+
+$i = Investor::create(['name'=>'pradip','email'=>'pradip@gmail.com','image'=>'pradip.png']);
+$iable = Fundable::create(['investor_id'=>'1','fundable_id'=>'1','fundable_type'=>'App\Models\Investor']);
+
+$c = Startup::create(['user_id'=>'1','name'=>'ecosystem','tagline'=>'save earth','logo'=>'ecosystem.png']);
+$c = Startup::create(['user_id'=>'2','name'=>'snapchat','tagline'=>'snapchat','logo'=>'snapchat.png']);
+$c = Startup::create(['user_id'=>'1','name'=>'whatsapp','tagline'=>'whatsapp','logo'=>'whatsapp.png']);
+
+
+$n = News::create(['title'=>'Watch: Why BJP may remove BS Yediyurappa','link'=>'https://www.indiatoday.in/india/video/watch-why-bjp-may-remove-bs-yediyurappa-1829385-2021-07-17','date_published'=>'2021-07-17 07:24:12']);
+
+$nable=newsable::create(['news_id'=>'1','newsable_id'=>'2','newsable_type'=>'App\Models\Startup']);
+
+$n = News::create(['title'=>'Tokyo Olympics Anurag Thakur to flag off 1st batch of Indian athletes from Delhi on July 17','link'=>'https://www.msn.com/en-in/sports/athletes','date_published'=>'2021-07-17 08:24:12']);
+$nable=newsable::create(['news_id'=>'2','newsable_id'=>'1','newsable_type'=>'App\Models\Investor']);
+
+$m = Milestone::create(['startup_id'=>'1','title'=>'30% done','link'=>'https://byjus.com/biology/ecosystem/','date_published'=>'2021-07-15 07:25:08']);
+
+$f = Funding::create(['startup_id'=>'3','round'=>'2','amount'=>'100','date_announced'=>'2021-07-15 07:25:08']);
