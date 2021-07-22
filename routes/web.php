@@ -32,12 +32,15 @@ Route::get('/', function () {
         if ($like->likeable_type == 'App\Models\Startup') {
             Startup::where('user_id', $like->likeable_id)->chunkById(Startup::count(), function ($startupDetails) use (&$unwindActivity) {
                 foreach ($startupDetails as $startup) {
-                    $startup['type'] = 'Startup';
+                    $s = [];
+                    $s = json_decode(json_encode($startup), true);
+                    $s['type'] = 'App\Models\Startup';
                     foreach (json_decode($startup->News) as $news) {
                         $news->type = 'news';
                         $news->date = date('Y-m-d', strtotime($news->date_published));
                         $news->timestamp = $news->date_published;
-                        array_push($unwindActivity, array_merge([json_decode($startup, true)][0], ['activity' => $news]));
+                        $s['activity'] = json_decode(json_encode($news), true);
+                        array_push($unwindActivity, $s);
                     }
                     foreach (json_decode($startup->Funding) as $funding) {
                         $funding->type = 'funding';
@@ -46,97 +49,91 @@ Route::get('/', function () {
                         $funding->Investor = funding_investors::join('investors', 'investors.id', '=', 'funding_investors.investor_id')
                             ->where('funding_id', $funding->id)
                             ->get();
-                        array_push($unwindActivity, array_merge([json_decode($startup, true)][0], ['activity' => $funding]));
+                        $s['activity'] = json_decode(json_encode($funding), true);
+                        array_push($unwindActivity, $s);
                     }
                     foreach (json_decode($startup->Milestones) as $milestone) {
                         $milestone->type = 'milestone';
                         $milestone->date = date('Y-m-d', strtotime($milestone->date_published));
                         $milestone->timestamp = $milestone->date_published;
-                        array_push($unwindActivity, array_merge([json_decode($startup, true)][0], ['activity' => $milestone]));
+                        $s['activity'] = json_decode(json_encode($milestone), true);
+                        array_push($unwindActivity, $s);
                     }
                 }
             });
         } elseif ($like->likeable_type == 'App\Models\Investor') {
             Investor::where('id', $like->likeable_id)->chunkById(Investor::count(), function ($investors) use (&$unwindActivity) {
                 foreach ($investors as $investor) {
-                    $investor['type'] = 'Investor';
-                    foreach (json_decode($investor->News) as $news) {
-                        $news->type = 'news';
-                        $news->date = date('Y-m-d', strtotime($news->date_published));
-                        $news->timestamp = $news->date_published;
-                        array_push($unwindActivity, array_merge([json_decode($investor, true)][0], ['activity' => $news]));
+                    $i = [];
+                    $i = json_decode(json_encode($investor), true);
+                    $i['type'] = 'App\Models\Investor';
+                    foreach (json_decode($investor->News) as $key => $new) {
+                        $new->type = 'news';
+                        $new->date = date('Y-m-d', strtotime($new->date_published));
+                        $new->timestamp = $new->date_published;
+                        $i['activity'] = json_decode(json_encode($new), true);
+                        array_push($unwindActivity, $i);
                     }
                 }
             });
         }
     }
 
-    $uniques = $startupActivity = [];
-    foreach ($unwindActivity as $c) {
-        $uniques[$c['activity']->date] = $c;
-    }
-    $uniques = collect($uniques)->sortBy('activity.timestamp')->reverse()->toArray();
+    usort($unwindActivity, function ($a, $b) {
+        return ($a['activity']['date'] < $b['activity']['date']) ? -1 : 1;
+    });
 
-    foreach ($uniques as $date => $value) {
+    $startupActivitys = [];
+    foreach ($unwindActivity as $activity) {
+        $feed = [];
+        if ($activity['type'] == 'App\Models\Investor') {
+            $feed = Investor::where('id', $activity['id'])->select()->get()->toArray();
+            $feed = $feed[0];
+            $feed['type'] = 'App\Models\Investor';
+        } elseif ($activity['type'] == 'App\Models\Startup') {
+            $feed = Startup::where('id', $activity['id'])->select()->get()->toArray();
+            $feed = $feed[0];
+            $feed['type'] = 'App\Models\Startup';
+        }
+
+        $flag = 0;
         $count = 0;
+        foreach ($startupActivitys as $startupActivity) {
+            if (($startupActivity['id'] == $activity['id'] && $startupActivity['type'] == $activity['type'])) {
+                $month = date('m', strtotime($startupActivity['date'])) == date('m', strtotime($activity['activity']['date']));
+                $year = date('Y', strtotime($startupActivity['date'])) == date('Y', strtotime($activity['activity']['date']));
 
-        foreach ($likes as $like) {
-            if ($like->likeable_type == 'App\Models\Startup') {
-                Startup::where('id', $like->likeable_id)->chunkById(Startup::count(), function ($startupDetails) use (&$unwindActivity, &$date, &$count, &$startupActivity) {
-                    foreach ($startupDetails as $startup) {
-                        $todayActivity = [];
-                        foreach ($unwindActivity as $activity) {
-                            $id = 0;
-                            try {
-                                $id = $activity['id'];
-                            } catch (Exception $ex) {
-                                $id = $activity['activity']->startup_id;
-                            }
-                            if ($date == date('Y-m-d', strtotime($activity['activity']->date)) && $startup->id == $id && $activity['type'] == 'Startup') {
-                                array_push($todayActivity, $activity['activity']);
-                                unset($activity);
-                            }
-                        }
-                        if (count($todayActivity) != 0) {
-                            $startup['type'] = 'Startup';
-                            array_push($startupActivity, array_merge(['feed' => $startup], ['activity' => $todayActivity]));
-                        }
-                        $count = $count + 1;
-                    }
-                });
-            } elseif ($like->likeable_type == 'App\Models\Investor') {
-                Investor::where('id', $like->likeable_id)->chunkById(Investor::count(), function ($investors) use (&$unwindActivity, &$date, &$count, &$startupActivity, &$user) {
-                    foreach ($investors as $investor) {
-                        $todayActivity = [];
-                        foreach ($unwindActivity as $activity) {
-                            $id = 0;
-                            try {
-                                $id = $activity['id'];
-                            } catch (Exception $ex) {
-                                $id = $activity['activity']->startup_id;
-                            }
-                            if ($date == date('Y-m-d', strtotime($activity['activity']->date)) && $investor->id == $id && $activity['type'] == 'Investor') {
-                                array_push($todayActivity, $activity['activity']);
-                                unset($activity);
-                            }
-                        }
-                        if (count($todayActivity) != 0) {
-                            $investor['type'] = 'Investor';
-                            $likedata = Like::where('user_id', $user->id)->orderBy('created_at', 'desc')->limit(1)->get();
-                            if ($likedata[0]['likeable_type'] == 'App\Models\Investor' && $likedata[0]['likeable_id'] == $investor->id) {
-                                array_unshift($startupActivity, array_merge(['feed' => $investor], ['activity' => $todayActivity]));
-                            } else {
-                                array_push($startupActivity, array_merge(['feed' => $investor], ['activity' => $todayActivity]));
-                            }
-                        }
-                        $count = $count + 1;
-                    }
-                });
+                if ($month && $year) {
+                    $feed = $startupActivity;
+                    $flag = 1;
+                    break;
+                }
             }
+            ++$count;
+        }
+
+        if ($flag == 0) {
+            $feed['date'] = $activity['activity']['date'];
+            $feed['activitys']['total'] = 1;
+            $feed['activitys']['0'] = $activity['activity'];
+            $startupActivitys[$count] = $feed;
+        } else {
+            $feed['activitys']['total'] = count($feed['activitys']);
+            $feed['activitys'][$feed['activitys']['total'] - 1] = $activity['activity'];
+            $startupActivitys[$count] = $feed;
         }
     }
 
-    echo json_encode($startupActivity);
+    Like::where('user_id', $user->id)->orderBy('created_at', 'desc')->chunkById(1, function ($like) use (&$startupActivitys) {
+        foreach ($startupActivitys as $key => $startupActivity) {
+            if ($startupActivity['id'] == $like[0]->likeable_id && $startupActivity['type'] == $like[0]->likeable_type) {
+                array_unshift($startupActivitys, $startupActivity);
+                unset($startupActivitys[$key]);
+            }
+        }
+    });
+
+    echo json_encode($startupActivitys);
 
     return view('welcome');
 });
